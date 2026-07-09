@@ -303,10 +303,10 @@
     {
       title: "بريف المشروع",
       questions: [
-        { id: "overview", label: "نبذة عن المشروع أو الفكرة العامة", type: "textarea" },
+        { id: "overview", label: "نبذة عن المشروع أو الفكرة العامة", type: "textarea", required: true },
         { id: "audience", label: "الفئة المستهدفة (العمر، الاهتمامات، طبيعة الاستخدام)", type: "textarea" },
-        { id: "competitors", label: "المنافسون المباشرون (أسماء تطبيقات/مواقع مشابهة)", type: "text" },
-        { id: "references", label: "تصاميم أو تطبيقات يعجبكم شكلها وتجربتها", type: "text" },
+        { id: "competitors", label: "المنافسون المباشرون (أسماء تطبيقات/مواقع مشابهة)", type: "text", required: true },
+        { id: "references", label: "تصاميم أو تطبيقات يعجبكم شكلها وتجربتها", type: "text", required: true },
         { id: "mood", label: "الإحساس المطلوب للتصميم", type: "chips",
           options: ["فخم", "بسيط وعصري", "ودود ومرح", "احترافي وجاد", "دافئ وإنساني", "تقني ومتطور"] },
       ]
@@ -314,25 +314,25 @@
     {
       title: "نوع المشروع",
       questions: [
-        { id: "type", label: "نوع المشروع", type: "options",
+        { id: "type", label: "نوع المشروع", type: "options", required: true,
           options: ["تطبيق موبايل", "ويب أبلكيشن", "موقع تعريفي", "صفحة هبوط", "أكثر من نوع"] },
         { id: "mobileOS", label: "إذا تطبيق موبايل: أي نظام تشغيل؟", type: "options",
           options: ["iOS فقط", "Android فقط", "الاثنين"],
           showIf: (a) => a.type === "تطبيق موبايل" || a.type === "أكثر من نوع" },
-        { id: "responsive", label: "إذا ويب: نوع التصميم", type: "options",
+        { id: "responsive", label: "إذا ويب: نوع التصميم", type: "options", required: true,
           options: ["متجاوب (Responsive) لكل الشاشات", "Desktop فقط", "غير منطبق"] },
-        { id: "rtl", label: "هل فيه نسخة عربي/انجليزي (دعم RTL)؟", type: "options",
+        { id: "rtl", label: "هل فيه نسخة عربي/انجليزي (دعم RTL)؟", type: "options", required: true,
           options: ["نعم، لغتين", "عربي فقط", "انجليزي فقط"] },
       ]
     },
     {
       title: "نطاق العمل، المميزات، والصفحات",
       questions: [
-        { id: "features", label: "أهم المميزات المطلوبة", type: "chips",
+        { id: "features", label: "أهم المميزات المطلوبة", type: "chips", required: true,
           hint: "اختاري كل ما ينطبق، وأضيفي التفاصيل في الملاحظات إذا حبيتي",
           options: ["تسجيل دخول", "سلة شراء", "دفع إلكتروني", "لوحة تحكم", "إشعارات", "بحث وفلترة", "حجز مواعيد", "دردشة/دعم", "تعدد لغات", "أخرى"] },
         { id: "pages", label: "كم عدد الصفحات/الشاشات المتوقعة تقريبًا؟", type: "text" },
-        { id: "fromScratch", label: "المشروع من الصفر ولا تجديد لتصميم قديم؟", type: "options",
+        { id: "fromScratch", label: "المشروع من الصفر ولا تجديد لتصميم قديم؟", type: "options", required: true,
           options: ["من الصفر", "تجديد (Redesign)", "دمج بين الاثنين"] },
         { id: "mvp", label: "إيش أهم ميزة أو صفحة تعتبرينها أولوية قصوى للإطلاق الأول؟", type: "textarea" },
       ]
@@ -364,7 +364,7 @@
     {
       title: "الميزانية والجدول الزمني",
       questions: [
-        { id: "budget", label: "نطاق الميزانية التقريبي", type: "text" },
+        { id: "budget", label: "نطاق الميزانية التقريبي", type: "text", required: true },
         { id: "deadline", label: "فيه Deadline محدد؟ (تاريخ الإطلاق أو العرض)", type: "text" },
         { id: "comms", label: "تفضيل التواصل أثناء المشروع", type: "options",
           options: ["اجتماعات أسبوعية", "تقارير تقدم مكتوبة", "الاثنين معًا"] },
@@ -381,11 +381,13 @@
   ];
 
   function App(){
+    const [started, setStarted] = React.useState(false);
     const [meta, setMeta] = React.useState({ client: "", contact: "" });
     const [answers, setAnswers] = React.useState({});
     const [toast, setToast] = React.useState(false);
     const [sending, setSending] = React.useState(false);
     const [sent, setSent] = React.useState(false);
+    const [error, setError] = React.useState("");
 
     function setAnswer(id, val){
       setAnswers(a => ({...a, [id]: val}));
@@ -434,7 +436,34 @@
       }).catch(() => {});
     }
 
+    function findMissingRequired(){
+      const missing = [];
+      if (!meta.client) missing.push("اسم العميل / الشركة");
+      if (!meta.contact) missing.push("جهة التواصل");
+      SECTIONS.forEach(s => s.questions.forEach(q => {
+        if (!q.required) return;
+        if (q.showIf && !q.showIf(answers)) return;
+        const v = answers[q.id];
+        const empty = Array.isArray(v) ? v.length === 0 : (!v || !v.trim());
+        if (empty) missing.push(q.label);
+      }));
+      return missing;
+    }
+
+    function resetForm(){
+      setMeta({ client: "", contact: "" });
+      setAnswers({});
+      setError("");
+      setSent(false);
+    }
+
     function sendToSheet(){
+      const missing = findMissingRequired();
+      if (missing.length > 0) {
+        setError("فيه حقول إلزامية ناقصة: " + missing.join("، "));
+        return;
+      }
+      setError("");
       setSending(true);
       const text = buildText();
       fetch(SHEET_WEBHOOK_URL, {
@@ -486,6 +515,34 @@
       return null;
     }
 
+    if (!started) {
+      return e('div', {style:{minHeight: 480, display:'flex', flexDirection:'column'}},
+        e('div', {className: 'hero', style:{flex:1}},
+          e('div', {className: 'eyebrow'}, 'أهلاً بك'),
+          e('h1', null, 'قبل ما نبدأ مشروعك سوا'),
+          e('p', null, 'أنا شريفة، مصممة UI/UX. هدفي إني أفهم مشروعك صح من أول خطوة، عشان أقدر أحدد نطاق العمل، الوقت المتوقع، والميزانية بشكل واضح وعادل للطرفين.'),
+          e('p', {style:{marginTop:14}}, 'الإجابات اللي بتعبيها بتُستخدم بس لتحديد نطاق المشروع والتواصل معك بخصوصه، وما راح تُشارك مع أي جهة ثانية.'),
+          e('p', {style:{marginTop:14, color:'#C9CCE0'}}, 'تاخذ منك ٥ دقائق تقريبًا، وتقدرين تتنقلين بين الأسئلة بحرية.')
+        ),
+        e('div', {className: 'footer'},
+          e('button', {className: 'btn btn-primary', onClick: () => setStarted(true)}, 'ابدأ الاستبيان')
+        )
+      );
+    }
+
+    if (sent) {
+      return e('div', {style:{minHeight: 480, display:'flex', flexDirection:'column'}},
+        e('div', {className: 'hero', style:{flex:1}},
+          e('div', {className: 'eyebrow'}, 'تم بنجاح'),
+          e('h1', null, '✓ تم إرسال إجاباتك'),
+          e('p', null, 'شكرًا لوقتك! وصلتنا كل التفاصيل، وبنتواصل معك قريبًا لمناقشة نطاق المشروع والخطوة التالية.')
+        ),
+        e('div', {className: 'footer'},
+          e('button', {className: 'btn btn-primary', onClick: resetForm}, 'إرسال إجابات أخرى')
+        )
+      );
+    }
+
     return e('div', null,
       e('div', {className: 'rail'},
         e('div', {className: 'rail-label'}, `${pct}% مكتمل`),
@@ -505,11 +562,11 @@
             e('div', {className: 'section-title'}, 'معلومات أساسية')
           ),
           e('div', {className: 'q'},
-            e('label', null, 'اسم العميل / الشركة'),
+            e('label', null, 'اسم العميل / الشركة', e('span', {style:{color:'var(--danger)'}}, ' *')),
             e('input', {type:'text', value: meta.client, onChange: ev => setMeta({...meta, client: ev.target.value})})
           ),
           e('div', {className: 'q'},
-            e('label', null, 'جهة التواصل'),
+            e('label', null, 'جهة التواصل', e('span', {style:{color:'var(--danger)'}}, ' *')),
             e('input', {type:'text', value: meta.contact, onChange: ev => setMeta({...meta, contact: ev.target.value})})
           ),
         ),
@@ -519,16 +576,15 @@
             e('div', {className: 'section-title'}, s.title)
           ),
           s.questions.filter(q => !q.showIf || q.showIf(answers)).map(q => e('div', {className: 'q', key: q.id},
-            e('label', null, q.label),
+            e('label', null, q.label, q.required ? e('span', {style:{color:'var(--danger)'}}, ' *') : null),
             q.hint ? e('div', {className: 'hint'}, q.hint) : null,
             renderQ(q)
           ))
         ))
       ),
       e('div', {className: 'footer'},
-        sent
-          ? e('div', {style: {textAlign:'center', padding: '10px 0', color: 'var(--teal)', fontWeight: 700, fontSize: 15}}, '✓ تم إرسال إجاباتك بنجاح، شكرًا لوقتك!')
-          : e('button', {className: 'btn btn-primary', onClick: sendToSheet, disabled: sending}, sending ? 'جاري الإرسال...' : 'إرسال الإجابات'),
+        e('button', {className: 'btn btn-primary', onClick: sendToSheet, disabled: sending}, sending ? 'جاري الإرسال...' : 'إرسال الإجابات'),
+        error && e('div', {style: {color: 'var(--danger)', fontSize: 13, marginTop: 10, textAlign: 'center'}}, error),
       ),
       e('div', {className: 'toast' + (toast ? ' show' : '')}, 'تم نسخ الإجابات ✓')
     );

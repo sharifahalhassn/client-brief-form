@@ -529,9 +529,6 @@
         sent
           ? e('div', {style: {textAlign:'center', padding: '10px 0', color: 'var(--teal)', fontWeight: 700, fontSize: 15}}, '✓ تم إرسال إجاباتك بنجاح، شكرًا لوقتك!')
           : e('button', {className: 'btn btn-primary', onClick: sendToSheet, disabled: sending}, sending ? 'جاري الإرسال...' : 'إرسال الإجابات'),
-        !sent && e('div', {className: 'copy-row'},
-          e('button', {className: 'btn btn-ghost', onClick: copyOut}, 'أو انسخي الإجابات يدويًا')
-        ),
       ),
       e('div', {className: 'toast' + (toast ? ' show' : '')}, 'تم نسخ الإجابات ✓')
     );

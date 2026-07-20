@@ -297,7 +297,7 @@
 <script>
 (function(){
   const e = React.createElement;
-  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwg87f20vUsgM6urTtiIaCYt-0-ZnjIh7aGsPqw0QFe2-82eTQEBKHT6R8IqxY3X5wxOg/exec";
+  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzhM0itPiC92bar9yFjRjEvPlyrWzz2Vo72Rheb7ogeuJjSetVxOszBIUM7cdkWzNRYbg/exec";
 
   const SECTIONS = [
     {
@@ -306,9 +306,6 @@
         { id: "overview", label: "نبذة عن المشروع أو الفكرة العامة", type: "textarea", required: true },
         { id: "audience", label: "الفئة المستهدفة (العمر، الاهتمامات، طبيعة الاستخدام)", type: "textarea" },
         { id: "competitors", label: "المنافسون المباشرون (أسماء تطبيقات/مواقع مشابهة)", type: "text", required: true },
-        { id: "references", label: "تصاميم أو تطبيقات يعجبكم شكلها وتجربتها", type: "text", required: true },
-        { id: "mood", label: "الإحساس المطلوب للتصميم", type: "chips",
-          options: ["فخم", "بسيط وعصري", "ودود ومرح", "احترافي وجاد", "دافئ وإنساني", "تقني ومتطور"] },
       ]
     },
     {
@@ -318,9 +315,10 @@
           options: ["تطبيق موبايل", "ويب أبلكيشن", "موقع تعريفي", "صفحة هبوط", "أكثر من نوع"] },
         { id: "mobileOS", label: "إذا تطبيق موبايل: أي نظام تشغيل؟", type: "options",
           options: ["iOS فقط", "Android فقط", "الاثنين"],
-          showIf: (a) => a.type === "تطبيق موبايل" || a.type === "أكثر من نوع" },
-        { id: "responsive", label: "إذا ويب: نوع التصميم", type: "options", required: true,
-          options: ["متجاوب (Responsive) لكل الشاشات", "Desktop فقط", "غير منطبق"] },
+          showIf: (a) => a.type === "تطبيق موبايل" },
+        { id: "responsive", label: "إذا ويب: نوع التصميم", type: "options",
+          options: ["متجاوب (Responsive) لكل الشاشات", "Desktop فقط", "غير منطبق"],
+          showIf: (a) => a.type === "ويب أبلكيشن" || a.type === "موقع تعريفي" || a.type === "صفحة هبوط" },
         { id: "rtl", label: "هل فيه نسخة عربي/انجليزي (دعم RTL)؟", type: "options", required: true,
           options: ["نعم، لغتين", "عربي فقط", "انجليزي فقط"] },
       ]
@@ -334,31 +332,8 @@
         { id: "pages", label: "كم عدد الصفحات/الشاشات المتوقعة تقريبًا؟", type: "text" },
         { id: "fromScratch", label: "المشروع من الصفر ولا تجديد لتصميم قديم؟", type: "options", required: true,
           options: ["من الصفر", "تجديد (Redesign)", "دمج بين الاثنين"] },
-        { id: "mvp", label: "إيش أهم ميزة أو صفحة تعتبرينها أولوية قصوى للإطلاق الأول؟", type: "textarea" },
-      ]
-    },
-    {
-      title: "مرحلة المشروع",
-      questions: [
-        { id: "research", label: "عندكم أبحاث مستخدمين أو Persona جاهزة؟", type: "options",
-          options: ["نعم جاهزة", "لا، نبدأ من الصفر", "جزئيًا"] },
-        { id: "prototype", label: "مطلوب Prototype تفاعلي للعرض على مستثمرين أو فريق تقني؟", type: "options",
-          options: ["نعم", "لا", "غير متأكد"] },
-        { id: "redesignIssue", label: "إذا تجديد: إيش أكبر مشكلة بالتصميم الحالي؟", type: "textarea" },
-      ]
-    },
-    {
-      title: "الهوية البصرية",
-      questions: [
-        { id: "brand", label: "عندكم Brand Guideline (شعار، ألوان، خطوط) جاهز؟", type: "options",
-          options: ["نعم جاهز بالكامل", "جزئي (شعار بس مثلاً)", "لا يوجد"] },
-      ]
-    },
-    {
-      title: "القرار والاعتماد",
-      questions: [
-        { id: "approver", label: "مين يعطي الموافقة النهائية على التصميم؟", type: "options",
-          options: ["شخص واحد", "فريق أو لجنة"] },
+        { id: "redesignIssue", label: "إذا تجديد: إيش أكبر مشكلة بالتصميم الحالي؟", type: "textarea",
+          showIf: (a) => a.fromScratch === "تجديد (Redesign)" },
       ]
     },
     {
@@ -370,19 +345,11 @@
           options: ["اجتماعات أسبوعية", "تقارير تقدم مكتوبة", "الاثنين معًا"] },
       ]
     },
-    {
-      title: "المحتوى والتسليمات",
-      questions: [
-        { id: "handoff", label: "شكل التسليم المطلوب", type: "options",
-          options: ["ملف فيجما مفتوح", "نسخة مغلقة من التصميم"] },
-        { id: "dev", label: "عندكم مطورين جاهزين؟ أي تقنية؟", type: "text" },
-      ]
-    },
   ];
 
   function App(){
     const [started, setStarted] = React.useState(false);
-    const [meta, setMeta] = React.useState({ client: "", contact: "" });
+    const [meta, setMeta] = React.useState({ client: "" });
     const [answers, setAnswers] = React.useState({});
     const [toast, setToast] = React.useState(false);
     const [sending, setSending] = React.useState(false);
@@ -400,10 +367,9 @@
       });
     }
 
-    const totalQ = SECTIONS.reduce((n,s) => n + s.questions.length, 0) + 2;
+    const totalQ = SECTIONS.reduce((n,s) => n + s.questions.length, 0) + 1;
     let filled = 0;
     if (meta.client) filled++;
-    if (meta.contact) filled++;
     SECTIONS.forEach(s => s.questions.forEach(q => {
       const v = answers[q.id];
       if (Array.isArray(v) ? v.length > 0 : (v && v.trim && v.trim() !== "")) filled++;
@@ -413,8 +379,7 @@
     function buildText(){
       let out = "استبيان تحديد نطاق المشروع\n";
       out += "================================\n\n";
-      out += `العميل/الشركة: ${meta.client || "—"}\n`;
-      out += `جهة التواصل: ${meta.contact || "—"}\n\n`;
+      out += `العميل/الشركة: ${meta.client || "—"}\n\n`;
       SECTIONS.forEach((s, i) => {
         out += `${i+1}. ${s.title}\n`;
         out += "-".repeat(28) + "\n";
@@ -439,7 +404,6 @@
     function findMissingRequired(){
       const missing = [];
       if (!meta.client) missing.push("اسم العميل / الشركة");
-      if (!meta.contact) missing.push("جهة التواصل");
       SECTIONS.forEach(s => s.questions.forEach(q => {
         if (!q.required) return;
         if (q.showIf && !q.showIf(answers)) return;
@@ -451,7 +415,7 @@
     }
 
     function resetForm(){
-      setMeta({ client: "", contact: "" });
+      setMeta({ client: "" });
       setAnswers({});
       setError("");
       setSent(false);
@@ -564,10 +528,6 @@
           e('div', {className: 'q'},
             e('label', null, 'اسم العميل / الشركة', e('span', {style:{color:'var(--danger)'}}, ' *')),
             e('input', {type:'text', value: meta.client, onChange: ev => setMeta({...meta, client: ev.target.value})})
-          ),
-          e('div', {className: 'q'},
-            e('label', null, 'جهة التواصل', e('span', {style:{color:'var(--danger)'}}, ' *')),
-            e('input', {type:'text', value: meta.contact, onChange: ev => setMeta({...meta, contact: ev.target.value})})
           ),
         ),
         SECTIONS.map((s, i) => e('div', {className: 'section', key: i},

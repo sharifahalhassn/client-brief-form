@@ -297,7 +297,7 @@
 <script>
 (function(){
   const e = React.createElement;
-  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzhM0itPiC92bar9yFjRjEvPlyrWzz2Vo72Rheb7ogeuJjSetVxOszBIUM7cdkWzNRYbg/exec";
+  const SHEET_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxvZKPbQXTmaDcDI0M8SQ_0Yn93S_yScCcri3Y-H1bvjbwrPgrW9frEpdwLTBNToeRBHQ/exec";
 
   const SECTIONS = [
     {
@@ -355,6 +355,14 @@
     const [sending, setSending] = React.useState(false);
     const [sent, setSent] = React.useState(false);
     const [error, setError] = React.useState("");
+
+    React.useEffect(() => {
+      fetch(SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ type: 'visit' })
+      }).catch(() => {});
+    }, []);
 
     function setAnswer(id, val){
       setAnswers(a => ({...a, [id]: val}));
@@ -433,7 +441,7 @@
       fetch(SHEET_WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ type: 'submit', text })
       }).then(() => {
         setSending(false);
         setSent(true);
